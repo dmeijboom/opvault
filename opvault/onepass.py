@@ -27,7 +27,7 @@ import glob
 import hmac
 from Crypto.Cipher import AES
 
-from exceptions import OpvaultException
+from opvault.exceptions import OpvaultException
 
 
 class OnePass:
@@ -88,7 +88,7 @@ class OnePass:
         return True
 
     def unlock(self, master_password):
-        salt = bytes(base64.decodestring(self._profile_json['salt']))
+        salt = bytes(base64.decodestring(self._profile_json['salt'].encode()))
         iterations = self._profile_json['iterations']
 
         key, mac_key = self._derive_keys(master_password, salt, iterations)
@@ -119,12 +119,12 @@ class OnePass:
         return key, hmac
 
     def master_keys(self, derived_key, derived_mac_key):
-        encrypted = base64.decodestring(self._profile_json['masterKey'])
+        encrypted = base64.decodestring(self._profile_json['masterKey'].encode())
 
         return self.decrypt_keys(encrypted, derived_key, derived_mac_key)
 
     def overview_keys(self, derived_key, derived_mac_key):
-        encrypted = base64.decodestring(self._profile_json['overviewKey'])
+        encrypted = base64.decodestring(self._profile_json['overviewKey'].encode())
 
         return self.decrypt_keys(encrypted, derived_key, derived_mac_key)
 
@@ -187,7 +187,7 @@ class OnePass:
         return self._items
 
     def item_keys(self, item):
-        item_key = base64.decodestring(item['k'])
+        item_key = base64.decodestring(item['k'].encode())
         key_data = item_key[:-32]
         key_hmac = item_key[-32:]
 
@@ -200,11 +200,11 @@ class OnePass:
         return decrypted_key, decrypted_hmac
 
     def item_overview(self, item):
-        overview_data = base64.decodestring(item['o'])
+        overview_data = base64.decodestring(item['o'].encode())
 
         try:
             overview = self.decrypt_opdata(overview_data, self._overview_key, self._overview_mac_key)
-            item_data = json.loads(overview)
+            item_data = json.loads(overview.decode())
 
         except OpvaultException as e:
             except_msg = 'Cannot decrypt item: {0}, error: "{1}"'.format(item['uuid'], e.error)
@@ -219,12 +219,12 @@ class OnePass:
         return item_data
 
     def item_detail(self, item):
-        data = base64.decodestring(item['d'])
+        data = base64.decodestring(item['d'].encode())
 
         try:
             item_key, item_mac_key = self.item_keys(item)
             detail = self.decrypt_opdata(data, item_key, item_mac_key)
-            item_detail = json.loads(detail)
+            item_detail = json.loads(detail.decode())
 
         except OpvaultException as e:
             except_msg = 'Cannot decrypt item: {0}, error: "{1}"'.format(item['uuid'], e.error)
