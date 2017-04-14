@@ -19,7 +19,7 @@ def read(filename):
     return long_description
 
 setup(
-    name='opvault',
+    name='opvault3',
     version='0.2.3',
     author='Steyn Huizinga',
     author_email='steyn@oblcc.com',
